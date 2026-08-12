@@ -1,0 +1,204 @@
+/* ==========================================================================
+   CALLAN COACH — ESTILOS
+   Tema: azul escuro, branco, cinza, detalhes discretos em vermelho/rosa.
+   Mobile-first, mas funciona bem no desktop.
+   ========================================================================== */
+
+:root {
+  --navy: #0b1f3a;
+  --navy-2: #12294d;
+  --blue: #1f4b8f;
+  --accent: #b3315c;
+  --accent-2: #e0577a;
+  --bg: #f4f6f9;
+  --card: #ffffff;
+  --gray: #6b7480;
+  --gray-light: #e4e8ee;
+  --good: #1f9d55;
+  --warn: #d98c2b;
+  --bad: #c9364b;
+  --radius: 14px;
+  --shadow: 0 2px 10px rgba(11,31,58,0.08);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; background: var(--bg); color: var(--navy); }
+body { padding-bottom: env(safe-area-inset-bottom); }
+#app { max-width: 720px; margin: 0 auto; min-height: 100vh; display: flex; flex-direction: column; }
+button { font-family: inherit; cursor: pointer; }
+input, select, textarea { font-family: inherit; }
+a { color: var(--blue); }
+
+/* ---------- Topbar ---------- */
+.topbar {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 16px; background: var(--navy); color: #fff;
+  position: sticky; top: 0; z-index: 10;
+}
+.topbar .brand { font-weight: 700; font-size: 18px; display: flex; gap: 8px; align-items: center; cursor: pointer; }
+.topbar .brand span { letter-spacing: .2px; }
+.icon-btn { background: transparent; border: none; color: #fff; font-size: 20px; padding: 6px; border-radius: 10px; }
+.icon-btn:hover { background: rgba(255,255,255,.12); }
+.topbar.session { background: var(--navy-2); }
+.sesstitle { font-weight: 600; font-size: 15px; }
+
+/* ---------- Content ---------- */
+.content { flex: 1; padding: 16px 16px 90px; }
+.back { background: none; border: none; color: var(--blue); font-size: 15px; padding: 8px 0; margin-bottom: 4px; }
+
+/* ---------- Tabbar ---------- */
+.tabbar {
+  position: sticky; bottom: 0; display: flex; background: #fff;
+  border-top: 1px solid var(--gray-light); padding: 6px 4px env(safe-area-inset-bottom);
+}
+.tab {
+  flex: 1; background: none; border: none; display: flex; flex-direction: column;
+  align-items: center; gap: 2px; padding: 6px 2px; color: var(--gray); border-radius: 10px;
+}
+.tab span { font-size: 19px; }
+.tab small { font-size: 11px; }
+.tab:active { background: var(--gray-light); }
+
+/* ---------- Hero / Dashboard ---------- */
+.hero { padding: 4px 0 8px; }
+.hero h1 { margin: 0 0 4px; font-size: 26px; color: var(--navy); }
+.muted { color: var(--gray); }
+.small { font-size: 13px; }
+.stagepill {
+  display: inline-block; background: var(--navy); color: #fff; padding: 4px 12px;
+  border-radius: 999px; font-size: 13px; margin: 10px 0 8px;
+}
+.progressbar { background: var(--gray-light); border-radius: 999px; height: 10px; overflow: hidden; }
+.progressbar.thin { height: 5px; border-radius: 0; }
+.progressbar .fill { height: 100%; background: linear-gradient(90deg, var(--blue), var(--accent-2)); border-radius: 999px; transition: width .3s; }
+
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 14px; }
+.cards.grid2 .card { position: relative; }
+.card {
+  background: var(--card); border-radius: var(--radius); padding: 16px 14px;
+  box-shadow: var(--shadow); font-size: 15px; display: flex; flex-direction: column; gap: 6px;
+}
+.card.action { cursor: pointer; border: 1px solid var(--gray-light); transition: transform .15s; }
+.card.action:active { transform: scale(.97); }
+.card b { font-size: 14px; }
+.card small { color: var(--gray); }
+.badge {
+  position: absolute; top: 10px; right: 10px; background: var(--accent);
+  color: #fff; font-size: 11px; font-weight: 700; border-radius: 999px; padding: 2px 7px;
+}
+
+.statgrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 18px; }
+.stat { background: var(--card); border-radius: var(--radius); padding: 12px; text-align: center; box-shadow: var(--shadow); }
+.stat b { display: block; font-size: 20px; color: var(--navy); }
+.stat small { color: var(--gray); font-size: 11px; }
+
+.section-title { font-weight: 700; margin: 22px 0 10px; font-size: 15px; color: var(--navy); }
+.chiprow { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip {
+  background: #fff; border: 1px solid var(--gray-light); border-radius: 999px;
+  padding: 8px 14px; font-size: 14px; color: var(--navy);
+}
+.chip:active { background: var(--gray-light); }
+
+/* ---------- Stage / lessons ---------- */
+.lessonlist { display: flex; flex-direction: column; gap: 10px; margin-top: 12px; }
+.lessonrow {
+  background: var(--card); border-radius: var(--radius); padding: 12px 14px;
+  display: flex; align-items: center; justify-content: space-between; box-shadow: var(--shadow);
+}
+.tag { font-size: 11px; background: var(--gray-light); color: var(--navy); padding: 2px 8px; border-radius: 999px; margin-left: 6px; }
+.tag.warn { background: #fbe8d3; color: var(--warn); }
+.tag.good { background: #d9f2e3; color: var(--good); }
+
+/* ---------- Buttons ---------- */
+.btn {
+  background: var(--navy); color: #fff; border: none; border-radius: 12px;
+  padding: 12px 16px; font-size: 15px; font-weight: 600;
+}
+.btn.secondary { background: #fff; color: var(--navy); border: 1px solid var(--gray-light); }
+.btn.danger { background: #fff; color: var(--bad); border: 1px solid #f3c8ce; }
+.btn.small { padding: 7px 12px; font-size: 13px; border-radius: 9px; }
+.btn.block { display: block; width: 100%; margin-top: 10px; text-align: center; }
+.filelabel { text-align: center; }
+
+/* ---------- Callan Mode session ---------- */
+.session-content { padding-top: 8px; }
+.qcounter { text-align: center; color: var(--gray); font-size: 13px; margin: 10px 0; }
+.questioncard {
+  background: var(--navy); color: #fff; border-radius: 18px; padding: 26px 20px;
+  text-align: center; box-shadow: var(--shadow);
+}
+.qlabel { font-size: 11px; letter-spacing: 1px; opacity: .7; margin-bottom: 8px; }
+.qtext { font-size: 22px; font-weight: 600; line-height: 1.35; }
+.qcontrols { margin-top: 14px; }
+.qcontrols .icon-btn { background: rgba(255,255,255,.14); }
+
+.feedback { margin-top: 16px; }
+.feedback.hidden { display: none; }
+.fb { border-radius: 14px; padding: 14px; font-size: 15px; }
+.fb.good { background: #d9f2e3; color: var(--good); font-weight: 700; text-align: center; }
+.fb.minor, .fb.major { background: #fdecec; color: var(--bad); }
+.fb.warn { background: #fbe8d3; color: var(--warn); text-align: center; }
+.correct-answer { margin: 6px 0 10px; font-weight: 600; color: var(--navy); }
+
+.answer-area { margin-top: 20px; }
+.voice-row { display: flex; align-items: center; gap: 12px; justify-content: center; margin-bottom: 14px; }
+.mic-btn {
+  background: var(--accent); color: #fff; border: none; border-radius: 999px;
+  padding: 16px 26px; font-size: 16px; font-weight: 700; box-shadow: var(--shadow);
+}
+.mic-btn:active { transform: scale(.96); }
+.type-row { display: flex; gap: 8px; }
+.type-row input {
+  flex: 1; padding: 12px 14px; border-radius: 12px; border: 1px solid var(--gray-light); font-size: 15px;
+}
+
+.sessionbar {
+  position: sticky; bottom: 0; display: flex; gap: 8px; padding: 10px 16px calc(10px + env(safe-area-inset-bottom));
+  background: #fff; border-top: 1px solid var(--gray-light);
+}
+.sessionbar .chip { flex: 1; text-align: center; }
+
+/* ---------- Summary ---------- */
+.summary { text-align: center; padding-top: 30px; }
+.summarygrid { display: grid; grid-template-columns: repeat(3,1fr); gap: 12px; margin: 20px 0; }
+.summarygrid div { background: var(--card); border-radius: var(--radius); padding: 14px; box-shadow: var(--shadow); }
+.summarygrid b { display: block; font-size: 20px; }
+.summarygrid small { color: var(--gray); font-size: 11px; }
+.mistakelist { text-align: left; background: var(--card); border-radius: var(--radius); padding: 12px 18px; }
+
+/* ---------- Error bank ---------- */
+.errorlist { display: flex; flex-direction: column; gap: 10px; margin-top: 12px; }
+.errorcard { background: var(--card); border-radius: var(--radius); padding: 12px 14px; box-shadow: var(--shadow); border-left: 4px solid var(--accent); }
+
+/* ---------- Progress ---------- */
+.stagebar-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; font-size: 13px; }
+.stagebar-row .progressbar { flex: 1; }
+.historylist { display: flex; flex-direction: column; gap: 8px; }
+.historyrow { background: var(--card); border-radius: 12px; padding: 10px 14px; box-shadow: var(--shadow); }
+
+/* ---------- Vocab ---------- */
+.vocablist { display: flex; flex-direction: column; gap: 6px; margin-top: 10px; }
+.vocabrow { background: var(--card); border-radius: 10px; padding: 8px 12px; display: flex; justify-content: space-between; align-items: center; box-shadow: var(--shadow); }
+
+/* ---------- Forms ---------- */
+.formcard { background: var(--card); border-radius: var(--radius); padding: 14px; box-shadow: var(--shadow); display: flex; flex-direction: column; gap: 12px; margin-top: 10px; }
+.formcard label { display: flex; flex-direction: column; gap: 6px; font-size: 13px; color: var(--gray); }
+.formcard input, .formcard select, .formcard textarea { padding: 10px 12px; border-radius: 10px; border: 1px solid var(--gray-light); font-size: 15px; color: var(--navy); }
+.switch-row { flex-direction: row !important; align-items: center; gap: 8px !important; }
+.codeblock { background: var(--navy); color: #d9e3f2; padding: 12px; border-radius: 10px; font-size: 12px; overflow-x: auto; }
+textarea { width: 100%; margin-top: 8px; padding: 10px; border-radius: 10px; border: 1px solid var(--gray-light); }
+
+/* ---------- Onboarding ---------- */
+.onboarding { padding: 40px 24px; max-width: 420px; margin: 0 auto; text-align: center; }
+.onboarding h1 { font-size: 24px; }
+.onboarding label { display: block; margin: 18px 0 6px; text-align: left; font-size: 13px; color: var(--gray); }
+.onboarding input, .onboarding select { width: 100%; padding: 12px; border-radius: 10px; border: 1px solid var(--gray-light); font-size: 15px; }
+
+.empty { text-align: center; padding: 40px 20px; }
+
+@media (min-width: 640px) {
+  .grid2 { grid-template-columns: 1fr 1fr 1fr; }
+  .statgrid { grid-template-columns: repeat(6, 1fr); }
+}
