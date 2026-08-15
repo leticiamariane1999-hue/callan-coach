@@ -202,3 +202,21 @@ textarea { width: 100%; margin-top: 8px; padding: 10px; border-radius: 10px; bor
   .grid2 { grid-template-columns: 1fr 1fr 1fr; }
   .statgrid { grid-template-columns: repeat(6, 1fr); }
 }
+
+/* ---------- Atualização: identidade, tradução, imagens, admin ---------- */
+.brand small { display: block; font-weight: 400; font-size: 10px; opacity: .75; margin-top: -2px; }
+.signature { font-size: 12px; color: var(--gray); font-style: italic; margin: 2px 0 8px; }
+.statusrow { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+
+.translationbox {
+  margin-top: 12px; background: rgba(255,255,255,.14); color: #fff;
+  border-radius: 10px; padding: 10px 14px; font-size: 15px;
+}
+.translationbox.hidden { display: none; }
+.qimage { display: flex; justify-content: center; margin: 6px 0 14px; }
+.qimage svg { width: 140px; height: 105px; }
+
+.vocabrow { cursor: pointer; }
+.vocabrow .translationbox { color: var(--navy); background: var(--gray-light); margin-top: 6px; font-size: 13px; padding: 6px 10px; }
+
+.row-actions { display: flex; gap: 8px; }

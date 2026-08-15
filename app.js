@@ -10,6 +10,7 @@ async function boot() {
   Voice.init();
   await loadCustomQuestions();
   SETTINGS = await getSettings();
+  await recordPageView(); // contador LOCAL (só este dispositivo — ver Admin)
   if (!SETTINGS.onboarded) {
     renderOnboarding();
   } else {
@@ -35,6 +36,7 @@ function route() {
     case "import": return renderImport();
     case "ai": return renderAISettings();
     case "conversation": return renderConversation();
+    case "admin": return renderAdmin();
     default: return renderDashboard();
   }
 }
@@ -45,7 +47,7 @@ function nav(hash) { location.hash = hash; }
 function shell(contentHtml, activeTab = "") {
   app.innerHTML = `
     <header class="topbar">
-      <div class="brand" onclick="nav('#/dashboard')">🎓 <span>Callan Coach</span></div>
+      <div class="brand" onclick="nav('#/dashboard')">🎓 <span>Callan Coach <small>English Training</small></span></div>
       <button class="icon-btn" title="Configurações" onclick="nav('#/settings')">⚙️</button>
     </header>
     <main class="content">${contentHtml}</main>
@@ -73,9 +75,14 @@ async function renderDashboard() {
     <div class="hero">
       <h1>Callan Coach</h1>
       <p class="muted">Good to see you again${greetingName}!</p>
+      <p class="signature">Personal English Training for ${escapeHtml(SETTINGS.name || "Leticia Alves")}</p>
       <div class="stagepill">Stage atual: <b>${SETTINGS.currentStage}</b></div>
       <div class="progressbar"><div class="fill" style="width:${stageProgress}%"></div></div>
       <small class="muted">${stageProgress}% do conteúdo carregado nesta stage já dominado</small>
+      <div class="statusrow">
+        <span class="tag ${SETTINGS.voiceEnabled ? "good" : ""}">🔊 Voice: ${SETTINGS.voiceEnabled ? "ON" : "OFF"}</span>
+        <span class="tag ${SETTINGS.translationMode !== "hidden" ? "good" : ""}">🌐 Translation: ${translationModeLabel(SETTINGS.translationMode)}</span>
+      </div>
     </div>
 
     <div class="cards grid2">
@@ -83,8 +90,9 @@ async function renderDashboard() {
       <div class="card action" onclick="nav('#/stage/1')">📚 <b>REVISAR STAGE 1</b></div>
       <div class="card action" onclick="nav('#/stage/2')">📚 <b>REVISAR STAGE 2</b></div>
       <div class="card action" onclick="nav('#/stage/3')">📖 <b>CONTINUAR STAGE 3</b></div>
-      <div class="card action" onclick="nav('#/errors')">🔄 <b>REVISAR MEUS ERROS</b>${dueCount ? `<span class="badge">${dueCount}</span>` : ""}</div>
+      <div class="card action" onclick="nav('#/errors')">🔄 <b>MEUS ERROS</b>${dueCount ? `<span class="badge">${dueCount}</span>` : ""}</div>
       <div class="card action" onclick="nav('#/conversation')">💬 <b>CONVERSAÇÃO</b></div>
+      <div class="card action" onclick="nav('#/vocab')">🌐 <b>VOCABULÁRIO</b></div>
     </div>
 
     <div class="statgrid">
@@ -125,6 +133,9 @@ async function countDue() {
   const all = allAvailableQuestions();
   const progresses = await Promise.all(all.map((q) => getProgress(q.id)));
   return progresses.filter((p) => p.nextReview && p.nextReview <= Date.now()).length;
+}
+function translationModeLabel(mode) {
+  return { hidden: "Escondida", button: "Available", auto: "Automática" }[mode] || "Available";
 }
 
 /* ============================== STAGE / LESSONS ============================== */
@@ -201,6 +212,8 @@ function renderSessionScreen() {
   if (!question) return finishSession();
 
   const pct = Math.round((s.index / s.queue.length) * 100);
+  const image = SETTINGS.imagesEnabled ? getQuestionImage(question) : null;
+  const showTranslationNow = SETTINGS.translationMode === "auto";
   app.innerHTML = `
     <header class="topbar session">
       <button class="icon-btn" onclick="endSessionEarly()">✕</button>
@@ -210,12 +223,15 @@ function renderSessionScreen() {
     <div class="progressbar thin"><div class="fill" style="width:${pct}%"></div></div>
     <main class="content session-content">
       <div class="qcounter">Question ${s.index + 1} / ${s.queue.length}</div>
+      ${image ? `<div class="qimage" title="${escapeHtml(image.alt)}">${image.svg}</div>` : ""}
       <div class="questioncard">
         <div class="qlabel">${questionTypeLabel(question)}</div>
         <div class="qtext" id="qtext">${escapeHtml(question.question)}</div>
         <div class="qcontrols">
           <button class="icon-btn" onclick="speakCurrent()">🔊</button>
+          ${question.translation && SETTINGS.translationMode !== "hidden" ? `<button class="icon-btn" id="translateBtn" onclick="toggleTranslation()">🌐</button>` : ""}
         </div>
+        ${question.translation ? `<div id="translationBox" class="translationbox ${showTranslationNow ? "" : "hidden"}">${escapeHtml(question.translation)}</div>` : ""}
       </div>
 
       <div id="feedback" class="feedback hidden"></div>
@@ -247,6 +263,11 @@ function questionTypeLabel(question) {
   return question.question.trim().endsWith("?") ? "CALLAN QUESTION" : "COMPLETE / RESPOND";
 }
 
+function toggleTranslation() {
+  const box = document.getElementById("translationBox");
+  if (box) box.classList.toggle("hidden");
+}
+
 function speakCurrent() {
   const q = SESSION?.queue[SESSION.index];
   if (!q) return;
@@ -255,6 +276,7 @@ function speakCurrent() {
 
 async function startListening() {
   if (!Voice.recogSupported) return;
+  if (Voice.recognition) Voice.recognition.lang = SETTINGS.recognitionLang || "en-US";
   const micBtn = document.getElementById("micBtn");
   const indicator = document.getElementById("listeningIndicator");
   micBtn.disabled = true;
@@ -280,28 +302,75 @@ async function handleAnswer(rawAnswer) {
   const responseMs = Date.now() - (s.questionShownAt || Date.now());
   s.responseTimes.push(responseMs);
 
-  const result = classifyAnswer(question.answer, rawAnswer);
-  const isCorrect = result.level === "correct";
+  // Motor de correção de fala: não confia cegamente na transcrição.
+  const evalResult = evaluateAnswer(question.answer, rawAnswer);
+
+  if (evalResult.level === "empty") {
+    const box = document.getElementById("feedback");
+    box.classList.add("hidden");
+    return;
+  }
+
+  // Se a correção contextual "consertou" uma palavra (ex: then→than) e isso
+  // resolveu a resposta, perguntamos antes de decidir — pode ser só o
+  // microfone que entendeu errado, não um erro de inglês de verdade.
+  if (evalResult.transcriptionFix && (evalResult.level === "correct" || evalResult.level === "minor")) {
+    s.pendingAnswer = { question, rawAnswer, evalResult };
+    showDidYouMean(question, evalResult);
+    return;
+  }
+
+  await finalizeAnswer(question, evalResult.level !== "wrong" && evalResult.level !== "major" && evalResult.level !== "empty", evalResult, rawAnswer, false);
+}
+
+function showDidYouMean(question, evalResult) {
+  const box = document.getElementById("feedback");
+  box.classList.remove("hidden");
+  box.innerHTML = `
+    <div class="fb warn">
+      <div>Você disse: <i>"${escapeHtml(evalResult.transcriptionFix.original)}"</i></div>
+      <div>Did you mean: <b>"${escapeHtml(evalResult.transcriptionFix.corrected)}"</b>?</div>
+      <div class="row-actions" style="margin-top:8px">
+        <button class="btn small" onclick="confirmDidYouMean(true)">✅ YES</button>
+        <button class="btn small secondary" onclick="confirmDidYouMean(false)">❌ NO</button>
+      </div>
+    </div>`;
+}
+
+async function confirmDidYouMean(accepted) {
+  const s = SESSION;
+  const pending = s?.pendingAnswer;
+  if (!pending) return;
+  s.pendingAnswer = null;
+  const { question, rawAnswer, evalResult } = pending;
+  if (accepted) {
+    // Foi erro de MICROFONE, não de inglês — conta como certo, não vai pro banco de erros.
+    await finalizeAnswer(question, true, evalResult, rawAnswer, true);
+  } else {
+    // O usuário confirma que disse mesmo aquilo — reavalia como erro de inglês real.
+    const strict = classifyAnswer(question.answer, rawAnswer);
+    await finalizeAnswer(question, false, strict, rawAnswer, false);
+  }
+}
+
+async function finalizeAnswer(question, isCorrect, result, rawAnswer, wasTranscriptionFix) {
+  const s = SESSION;
   s.answered += 1;
   if (isCorrect) s.correct += 1; else { s.wrong += 1; s.topMistakes.push(question.question); }
 
   await recordAnswer(question.id, isCorrect);
   await clearErrorIfMastered(question.id);
-  showFeedback(result, question, rawAnswer);
+  showFeedback(isCorrect ? { level: "correct" } : result, question, rawAnswer, wasTranscriptionFix);
 }
 
-function showFeedback(result, question, rawAnswer) {
+function showFeedback(result, question, rawAnswer, wasTranscriptionFix) {
   const box = document.getElementById("feedback");
   box.classList.remove("hidden");
   let html = "";
   if (result.level === "correct") {
-    html = `<div class="fb good">✅ Good!</div>`;
+    html = `<div class="fb good">✅ ${wasTranscriptionFix ? "Good! (era só o microfone)" : "Good!"}</div>`;
     Voice.speak("Good!");
     setTimeout(() => nextQuestion(), 700);
-  } else if (result.level === "empty") {
-    html = `<div class="fb warn">Say or type an answer to continue.</div>`;
-    box.classList.add("hidden");
-    return;
   } else {
     const hint = correctionHint(question.answer, rawAnswer);
     const errClass = result.level === "minor" ? "minor" : "major";
@@ -462,16 +531,28 @@ async function renderVocab() {
   shell(`
     <button class="back" onclick="nav('#/dashboard')">← Voltar</button>
     <h2>MY VOCABULARY</h2>
-    <p class="muted">${words.length} palavras carregadas dos seus materiais.</p>
+    <p class="muted">${words.length} palavras carregadas dos seus materiais. Toque numa palavra para ver a tradução.</p>
     <div class="vocablist">
-      ${words.map((w) => `
-        <div class="vocabrow">
-          <b>${escapeHtml(w.word)}</b>
-          <span class="tag">Stage ${w.stage} · Lição ${w.lesson}</span>
-        </div>`).join("")}
+      ${words.map((w, i) => {
+        const translation = VOCAB_TRANSLATIONS[w.word] || VOCAB_TRANSLATIONS[w.word.toLowerCase()];
+        return `
+        <div class="vocabrow" onclick="toggleVocabTranslation(${i})">
+          <div>
+            <b>${escapeHtml(w.word)}</b>
+            <span class="tag">Stage ${w.stage} · Lição ${w.lesson}</span>
+            ${translation ? `<div id="vocabT${i}" class="translationbox hidden">${escapeHtml(translation)}</div>` : ""}
+          </div>
+          <button class="icon-btn" onclick="event.stopPropagation(); pronounceWord('${escapeHtml(w.word).replace(/'/g, "\\'")}')">🔊</button>
+        </div>`;
+      }).join("")}
     </div>
   `);
 }
+function toggleVocabTranslation(i) {
+  const box = document.getElementById(`vocabT${i}`);
+  if (box) box.classList.toggle("hidden");
+}
+function pronounceWord(word) { Voice.speak(word, { speed: "slow" }); }
 
 /* ============================== CONVERSAÇÃO (livre, opcional) ============================== */
 function renderConversation() {
@@ -508,8 +589,22 @@ function renderSettings() {
           ${Voice.voices.map((v) => `<option value="${v.voiceURI}" ${SETTINGS.voiceURI===v.voiceURI?"selected":""}>${v.name} (${v.lang})</option>`).join("")}
         </select>
       </label>
-      <label class="switch-row"><input type="checkbox" id="setVoiceEnabled" ${SETTINGS.voiceEnabled?"checked":""}/> Falar perguntas automaticamente</label>
+      <label>🌐 Tradução
+        <select id="setTranslation">
+          <option value="hidden" ${SETTINGS.translationMode==="hidden"?"selected":""}>Sempre escondida</option>
+          <option value="button" ${SETTINGS.translationMode==="button"?"selected":""}>Disponível pelo botão</option>
+          <option value="auto" ${SETTINGS.translationMode==="auto"?"selected":""}>Mostrar automaticamente</option>
+        </select>
+      </label>
+      <label>🎙️ Microphone language
+        <select id="setRecogLang">
+          <option value="en-US" ${SETTINGS.recognitionLang==="en-US"?"selected":""}>English (US)</option>
+          <option value="en-GB" ${SETTINGS.recognitionLang==="en-GB"?"selected":""}>English (UK)</option>
+        </select>
+      </label>
+      <label class="switch-row"><input type="checkbox" id="setVoiceEnabled" ${SETTINGS.voiceEnabled?"checked":""}/> 🔊 Falar perguntas automaticamente</label>
       <label class="switch-row"><input type="checkbox" id="setAllowRepeat" ${SETTINGS.allowRepeat?"checked":""}/> Permitir repetição</label>
+      <label class="switch-row"><input type="checkbox" id="setImagesEnabled" ${SETTINGS.imagesEnabled?"checked":""}/> 🖼️ Mostrar imagens quando ajudarem</label>
       <button class="btn block" onclick="saveSettingsForm()">Salvar</button>
     </div>
 
@@ -526,6 +621,7 @@ function renderSettings() {
     <div class="formcard">
       <button class="btn block secondary" onclick="nav('#/import')">📥 IMPORTAR CONTEÚDO (JSON)</button>
       <button class="btn block secondary" onclick="nav('#/ai')">🤖 AI SETTINGS (Ollama — opcional)</button>
+      <button class="btn block secondary" onclick="nav('#/admin')">📊 VISUALIZAÇÕES / ADMIN</button>
     </div>
     <p class="muted small" style="text-align:center;margin-top:16px">Callan Coach funciona 100% local. Nenhum dado é enviado para servidores, nenhuma IA paga é usada.</p>
   `);
@@ -538,7 +634,10 @@ async function saveSettingsForm() {
   const voiceURI = document.getElementById("setVoice").value || null;
   const voiceEnabled = document.getElementById("setVoiceEnabled").checked;
   const allowRepeat = document.getElementById("setAllowRepeat").checked;
-  await setSettings({ name, currentStage, speed, voiceURI, voiceEnabled, allowRepeat });
+  const translationMode = document.getElementById("setTranslation").value;
+  const recognitionLang = document.getElementById("setRecogLang").value;
+  const imagesEnabled = document.getElementById("setImagesEnabled").checked;
+  await setSettings({ name, currentStage, speed, voiceURI, voiceEnabled, allowRepeat, translationMode, recognitionLang, imagesEnabled });
   SETTINGS = await getSettings();
   nav("#/dashboard");
 }
@@ -645,13 +744,80 @@ async function testOllamaConnection() {
   }
 }
 
+/* ============================== ADMIN / VISUALIZAÇÕES ============================== */
+async function renderAdmin() {
+  if (!SETTINGS.adminPassword) return renderAdminSetPassword();
+  return renderAdminLogin();
+}
+
+function renderAdminSetPassword() {
+  shell(`
+    <button class="back" onclick="nav('#/settings')">← Voltar</button>
+    <h2>ÁREA ADMIN</h2>
+    <p class="muted">Primeira vez aqui — defina uma senha local para proteger esta área. (Aviso: como o app roda 100% no navegador, isso é uma proteção discreta, não criptografia forte — não reutilize uma senha importante.)</p>
+    <div class="formcard">
+      <label>Nova senha<input type="password" id="newAdminPw" /></label>
+      <button class="btn block" onclick="setAdminPassword()">Definir e entrar</button>
+    </div>
+  `);
+}
+async function setAdminPassword() {
+  const pw = document.getElementById("newAdminPw").value;
+  if (!pw) return;
+  await setSettings({ adminPassword: pw });
+  SETTINGS = await getSettings();
+  renderAdminPanel();
+}
+function renderAdminLogin() {
+  shell(`
+    <button class="back" onclick="nav('#/settings')">← Voltar</button>
+    <h2>ÁREA ADMIN</h2>
+    <div class="formcard">
+      <label>Senha<input type="password" id="adminPw" onkeydown="if(event.key==='Enter') checkAdminPassword()" /></label>
+      <button class="btn block" onclick="checkAdminPassword()">Entrar</button>
+    </div>
+  `);
+}
+function checkAdminPassword() {
+  const pw = document.getElementById("adminPw").value;
+  if (pw === SETTINGS.adminPassword) renderAdminPanel();
+  else alert("Senha incorreta.");
+}
+async function renderAdminPanel() {
+  const stats = await getStats();
+  const sessions = await Store.getAll("sessions");
+  const errors = await Store.getAll("errors");
+  const custom = await Store.getAll("customLessons");
+  const days = Object.entries(stats.viewsByDay || {}).slice(-7);
+
+  shell(`
+    <button class="back" onclick="nav('#/settings')">← Voltar</button>
+    <h2>📊 VISUALIZAÇÕES / ADMIN</h2>
+    <div class="formcard">
+      <p class="muted small"><b>Importante:</b> este contador é <b>LOCAL</b> — conta só os acessos feitos NESTE navegador/dispositivo. Não é um contador público de visitantes do site. Para saber quantas pessoas diferentes acessaram o site publicado na internet, seria necessário um serviço de analytics externo (ex: GoatCounter, Plausible) — posso te ajudar a configurar um se quiser, mas isso envolve conectar um serviço de terceiros.</p>
+    </div>
+    <div class="statgrid">
+      <div class="stat"><b>${stats.totalViews || 0}</b><small>Total de acessos (local)</small></div>
+      <div class="stat"><b>${stats.uniqueDays || 0}</b><small>Dias distintos</small></div>
+      <div class="stat"><b>${sessions.length}</b><small>Sessões de estudo</small></div>
+      <div class="stat"><b>${errors.length}</b><small>Erros no banco</small></div>
+      <div class="stat"><b>${custom.length}</b><small>Lições importadas</small></div>
+      <div class="stat"><b>${stats.lastVisit ? timeAgo(stats.lastVisit) : "—"}</b><small>Último acesso</small></div>
+    </div>
+    <div class="section-title">Visualizações por dia (últimos registros)</div>
+    <div class="historylist">
+      ${days.length ? days.map(([day, count]) => `<div class="historyrow"><div>${day}</div><div class="muted small">${count} acesso(s)</div></div>`).join("") : `<p class="muted">Sem dados ainda.</p>`}
+    </div>
+  `);
+}
+
 /* ============================== ONBOARDING ============================== */
 function renderOnboarding() {
   app.innerHTML = `
     <div class="onboarding">
       <h1>WELCOME TO CALLAN COACH</h1>
       <p>Let's improve your English.</p>
-      <label>What's your name?<input id="obName" placeholder="Letícia" /></label>
+      <label>What's your name?<input id="obName" placeholder="Leticia Alves" value="Leticia Alves" /></label>
       <label>What is your current level?
         <select id="obStage">
           <option value="1">Stage 1</option>

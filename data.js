@@ -1,4 +1,177 @@
 /* ==========================================================================
+   TRADUÇÕES (PT-BR) — usadas pelo botão 🌐 Traduzir durante os exercícios.
+   Chave = texto exato da pergunta em inglês.
+   ========================================================================== */
+const TRANSLATIONS = {
+  "Is the pen in the book?": "A caneta está no livro?",
+  "Is the pen under the book?": "A caneta está embaixo do livro?",
+  "Is this Anna Brown?": "Esta é a Anna Brown?",
+  "Is this Mr Brown?": "Este é o Sr. Brown?",
+  "Is this Mrs Brown?": "Esta é a Sra. Brown?",
+  "Is this Jack Brown?": "Este é o Jack Brown?",
+  "Which pencil's black?": "Qual lápis é preto?",
+  "Which pencil's white?": "Qual lápis é branco?",
+  "Which book's open?": "Qual livro está aberto?",
+  "Which book's closed?": "Qual livro está fechado?",
+  "Is he Mr Brown?": "Ele é o Sr. Brown?",
+  "Is she Mrs Brown?": "Ela é a Sra. Brown?",
+  "Is he Mr Smith?": "Ele é o Sr. Smith?",
+  "Is she Mr Brown?": "Ela é o Sr. Brown?",
+
+  "Are you speaking English?": "Você está falando inglês?",
+  "Is he sitting on a chair?": "Ele está sentado numa cadeira?",
+  "Is she speaking French?": "Ela está falando francês?",
+  "Are we going home?": "Nós estamos indo para casa?",
+  "Are they standing behind the house?": "Eles estão em pé atrás da casa?",
+  "What's the difference between the present continuous and the present simple?": "Qual é a diferença entre o present continuous e o present simple?",
+  "Does he go home after the lesson?": "Ele vai para casa depois da aula?",
+  "Is she speaking?": "Ela está falando?",
+  "Does she speak?": "Ela fala?",
+
+  "Can you touch that book?": "Você consegue tocar naquele livro?",
+  "Can you read and write?": "Você sabe ler e escrever?",
+  "Do you dislike the cinema?": "Você não gosta de cinema?",
+  "Do you dislike television?": "Você não gosta de televisão?",
+  "Do you generally sit completely still in the lesson?": "Você geralmente fica completamente parado(a) durante a aula?",
+  "Do we speak with our mouths?": "Nós falamos com a boca?",
+  "How much is half of a hundred?": "Quanto é metade de cem?",
+  "How much is half of thirteen?": "Quanto é metade de treze?",
+
+  "Are both my hands on the table?": "As minhas duas mãos estão na mesa?",
+  "Which is it right to say: \"both us\" or \"both of us\"?": "O correto é dizer \"both us\" ou \"both of us\"?",
+  "Is Chinese a European language?": "O chinês é uma língua europeia?",
+  "Is Germany an Asian country?": "A Alemanha é um país asiático?",
+  "What's the negative of \"I have\"?": "Qual é o negativo de \"I have\"?",
+  "What's the contraction of \"I have not\"?": "Qual é a contração de \"I have not\"?",
+
+  "What's the difference between \"anybody\" and \"somebody\"?": "Qual é a diferença entre \"anybody\" e \"somebody\"?",
+  "Is there anybody sitting on the floor?": "Tem alguém sentado no chão?",
+  "Who's in the corridor?": "Quem está no corredor?",
+  "Do you like walking?": "Você gosta de caminhar?",
+  "What's the negative of \"can\"?": "Qual é o negativo de \"can\"?",
+  "What's the contraction of \"cannot\"?": "Qual é a contração de \"cannot\"?",
+  "Can you touch the ceiling?": "Você consegue tocar o teto?",
+  "What's a quarter of ten?": "Quanto é um quarto de dez?",
+  "Do you like learning a language?": "Você gosta de aprender um idioma?",
+
+  "Is English grammar difficult?": "A gramática inglesa é difícil?",
+  "What's the plural of \"child\"?": "Qual é o plural de \"child\"?",
+  "What do we call the thing we wear on our heads?": "Como chamamos a coisa que usamos na cabeça?",
+  "What kind of room is this?": "Que tipo de cômodo é este?",
+
+  "Give me some examples of prepositions, please.": "Me dê alguns exemplos de preposições, por favor.",
+  "Tell me the names of the four cardinal points, please.": "Diga os nomes dos quatro pontos cardeais, por favor.",
+  "Is Greece west of Italy?": "A Grécia fica a oeste da Itália?",
+  "What's the opposite of \"high\"?": "Qual é o oposto de \"high\"?",
+  "Can we speak without opening our mouths?": "Conseguimos falar sem abrir a boca?",
+  "What's the difference between a verb and a noun?": "Qual é a diferença entre um verbo e um substantivo?",
+
+  "Are all the cars in Europe Fords?": "Todos os carros na Europa são Ford?",
+  "What does this sentence mean: \"I'm not eating nothing\"?": "O que significa a frase \"I'm not eating nothing\"?",
+  "What do we smell with?": "Com o que a gente sente cheiro?",
+
+  "Have you got any friends?": "Você tem amigos?",
+  "What's the difference between \"into\" and \"in\"?": "Qual é a diferença entre \"into\" e \"in\"?",
+  "How many seconds make a minute?": "Quantos segundos formam um minuto?",
+  "In English, do we put an adjective before or after a noun?": "Em inglês, colocamos o adjetivo antes ou depois do substantivo?",
+
+  "Do you like food?": "Você gosta de comida?",
+  "What does the word \"uncle\" mean?": "O que significa a palavra \"uncle\"?",
+  "What does the word \"cousin\" mean?": "O que significa a palavra \"cousin\"?",
+  "Are all students good at learning languages?": "Todos os estudantes são bons em aprender idiomas?",
+
+  "What do we put on our bread?": "O que colocamos no nosso pão?",
+  "What can we say instead of \"not any books\"?": "O que podemos dizer no lugar de \"not any books\"?",
+  "Can you drive a car?": "Você sabe dirigir um carro?",
+  "How many pence make a pound?": "Quantos pence formam uma libra?",
+  "What's the difference between a watch and a clock?": "Qual é a diferença entre um relógio de pulso e um relógio de parede?",
+
+  "How many hours make a day?": "Quantas horas tem um dia?",
+  "How many days make a week?": "Quantos dias tem uma semana?",
+  "How many weeks make a month?": "Quantas semanas tem um mês?",
+  "How many months make a year?": "Quantos meses tem um ano?",
+  "What are the possessive adjectives?": "Quais são os adjetivos possessivos?",
+  "What's the difference between a possessive adjective and a possessive pronoun?": "Qual é a diferença entre um adjetivo possessivo e um pronome possessivo?",
+
+  "Do you eat all food?": "Você come qualquer tipo de comida?",
+  "What do we eat with?": "Com o que a gente come?",
+  "What colour's water?": "De que cor é a água?",
+  "Tell me the names of four metals, please.": "Diga os nomes de quatro metais, por favor.",
+  "What's a key generally made of?": "De que uma chave geralmente é feita?",
+  "Tell me the names of the days of the week, please.": "Diga os nomes dos dias da semana, por favor.",
+  "What do we call Saturday and Sunday?": "Como chamamos sábado e domingo?",
+
+  "Is a Rolls Royce cheap?": "Um Rolls Royce é barato?",
+  "What's the plural of \"a\"?": "Qual é o plural de \"a\"?",
+  "Can you hear well?": "Você escuta bem?",
+  "Whose book's this?": "De quem é este livro?",
+
+  "Tell me the names of the three meals that people generally eat a day.": "Diga os nomes das três refeições que as pessoas geralmente fazem por dia.",
+  "What do we eat our food from?": "De que a gente come (prato, tigela)?",
+  "What do we eat our food with?": "Com o que a gente come (garfo, faca)?",
+  "What's the difference between \"many\" and \"much\"?": "Qual é a diferença entre \"many\" e \"much\"?",
+  "What's the difference between \"few\" and \"little\"?": "Qual é a diferença entre \"few\" e \"little\"?",
+  "What's the difference between \"fewer than\" and \"less than\"?": "Qual é a diferença entre \"fewer than\" e \"less than\"?",
+
+  "What's the difference between \"the fewest\" and \"the least\"?": "Qual é a diferença entre \"the fewest\" e \"the least\"?",
+  "What's the window made of?": "De que a janela é feita?",
+  "Are you tall enough to touch the ceiling?": "Você é alto(a) o suficiente para tocar o teto?",
+  "Do you see badly?": "Você enxerga mal?",
+
+  "What's the comparative of \"beautiful\"?": "Qual é o comparativo de \"beautiful\"?",
+  "What's the superlative of \"small\"?": "Qual é o superlativo de \"small\"?",
+  "What's the superlative of \"expensive\"?": "Qual é o superlativo de \"expensive\"?",
+  "Why do we say \"cheaper than\" but not \"expensiver than\"?": "Por que dizemos \"cheaper than\" mas não \"expensiver than\"?",
+  "Tell me the names of the months of the year, please.": "Diga os nomes dos meses do ano, por favor.",
+  "What do the letters a.m. mean after the time?": "O que as letras a.m. significam depois da hora?",
+  "What do the letters p.m. mean after the time?": "O que as letras p.m. significam depois da hora?",
+  "What's the difference between a.m. and p.m.?": "Qual é a diferença entre a.m. e p.m.?",
+};
+
+/* Traduções de vocabulário (palavra → tradução) — usadas na tela Vocabulário. */
+const VOCAB_TRANSLATIONS = {
+  pen: "caneta", pencil: "lápis", book: "livro", table: "mesa", chair: "cadeira",
+  black: "preto", white: "branco", green: "verde", brown: "marrom",
+  home: "casa/lar", speak: "falar", remain: "permanecer", Japanese: "japonês", Chinese: "chinês",
+  can: "poder/conseguir", like: "gostar", dislike: "não gostar", cinema: "cinema", television: "televisão",
+  right: "direita/certo", left: "esquerda", half: "metade",
+  prefer: "preferir", tea: "chá", coffee: "café", both: "ambos", mean: "significar",
+  hello: "olá", goodbye: "tchau", "thank you": "obrigado(a)", language: "idioma",
+  anybody: "alguém (pergunta/negativa)", somebody: "alguém (afirmativa)", nobody: "ninguém",
+  walk: "caminhar", cannot: "não poder", quarter: "quarto (1/4)", teach: "ensinar", learn: "aprender",
+  easy: "fácil", difficult: "difícil", grammar: "gramática", married: "casado(a)", single: "solteiro(a)",
+  husband: "marido", wife: "esposa", mother: "mãe", father: "pai", child: "criança", children: "crianças",
+  preposition: "preposição", north: "norte", south: "sul", east: "leste", west: "oeste",
+  opposite: "oposto", without: "sem", verb: "verbo", noun: "substantivo",
+  anything: "qualquer coisa (pergunta/negativa)", something: "algo (afirmativa)", nothing: "nada",
+  front: "frente", back: "atrás/costas", top: "topo", bottom: "fundo/base", side: "lado", smell: "cheirar",
+  many: "muitos (contável)", few: "poucos (contável)", friend: "amigo(a)", into: "para dentro de",
+  why: "por quê", because: "porque", second: "segundo", minute: "minuto", hour: "hora",
+  food: "comida", son: "filho", daughter: "filha", brother: "irmão", sister: "irmã",
+  parents: "pais", relatives: "parentes", uncle: "tio", aunt: "tia", cousin: "primo(a)",
+  bread: "pão", butter: "manteiga", rice: "arroz", carry: "carregar", hear: "ouvir", drive: "dirigir",
+  money: "dinheiro", pound: "libra (moeda)", watch: "relógio de pulso",
+  time: "tempo/hora", day: "dia", week: "semana", month: "mês", year: "ano",
+  meat: "carne", sugar: "açúcar", mine: "meu (pronome)", yours: "seu (pronome)", whose: "de quem",
+  beautiful: "bonito(a)", handsome: "bonito (homem)", ugly: "feio(a)", eat: "comer", drink: "beber",
+  water: "água", wine: "vinho", milk: "leite", gold: "ouro", silver: "prata", steel: "aço", iron: "ferro",
+  cost: "custar", Monday: "segunda-feira", Tuesday: "terça-feira", Wednesday: "quarta-feira",
+  Thursday: "quinta-feira", Friday: "sexta-feira", Saturday: "sábado", Sunday: "domingo", weekend: "fim de semana",
+  want: "querer", begin: "começar", end: "terminar", last: "durar/último", cheap: "barato", expensive: "caro",
+  building: "prédio", inside: "dentro", outside: "fora", well: "bem", flower: "flor", plant: "planta",
+  meal: "refeição", breakfast: "café da manhã", lunch: "almoço", dinner: "jantar",
+  plate: "prato", bowl: "tigela", knife: "faca", fork: "garfo", spoon: "colher",
+  glass: "vidro/copo", wood: "madeira", paper: "papel", stone: "pedra", enough: "suficiente",
+  badly: "mal", telephone: "telefone", call: "ligar/chamar",
+  comparative: "comparativo", superlative: "superlativo", above: "acima", below: "abaixo",
+  January: "janeiro", February: "fevereiro", March: "março", April: "abril", May: "maio", June: "junho",
+  July: "julho", August: "agosto", September: "setembro", October: "outubro", November: "novembro", December: "dezembro",
+  "a.m.": "antes do meio-dia", "p.m.": "depois do meio-dia", midday: "meio-dia",
+  on: "sobre/em cima de", under: "embaixo de", in: "dentro de", behind: "atrás de",
+  "in front of": "na frente de", "next to": "ao lado de", near: "perto de", between: "entre",
+};
+
+/* ==========================================================================
    CALLAN COACH — REAL COURSE DATA
    ==========================================================================
    Fonte: materiais Callan Method enviados pelo usuário (PDFs).
@@ -24,8 +197,8 @@ const REAL_COURSE_DATA = {
         vocabulary: ["pen","pencil","book","table","chair","black","white","green","brown","Mr","Mrs"],
         grammar: [],
         questions: [
-          q(1,1,"Is the pen in the book?","No, the pen isn't in the book; it's under the book"),
-          q(1,1,"Is the pen under the book?","No, the pen isn't under the book; it's on the book"),
+          q(1,1,"Is the pen in the book?","No, the pen isn't in the book; it's under the book", {imageType:"position", imageKey:"under"}),
+          q(1,1,"Is the pen under the book?","No, the pen isn't under the book; it's on the book", {imageType:"position", imageKey:"on"}),
           q(1,1,"Is this Anna Brown?","No, it isn't Anna Brown; it's Mr Brown"),
           q(1,1,"Is this Mr Brown?","No, it isn't Mr Brown; it's Mrs Brown"),
           q(1,1,"Is this Mrs Brown?","No, it isn't Mrs Brown; it's Jack Brown"),
@@ -279,12 +452,15 @@ const REAL_COURSE_DATA = {
 };
 
 // Helper to build a question object with a stable id
-function q(stage, lesson, question, answer) {
+function q(stage, lesson, question, answer, extra = {}) {
   const id = `s${stage}-l${lesson}-${hash(question)}`;
   return {
     id, stage, lesson, question, answer,
     type: "callan",
     difficulty: 1,
+    translation: extra.translation || TRANSLATIONS[question] || null,
+    imageType: extra.imageType || null, // ex: "position", "object"
+    imageKey: extra.imageKey || null,   // ex: "on", "under", "book"
   };
 }
 function hash(str) {

@@ -4,7 +4,7 @@
    ========================================================================== */
 
 const DB_NAME = "callan-coach";
-const DB_VERSION = 1;
+const DB_VERSION = 2; // v2: +stats (contador local), +errors.errorKind (English x Transcription)
 let dbPromise = null;
 
 function openDB() {
@@ -12,6 +12,7 @@ function openDB() {
   dbPromise = new Promise((resolve, reject) => {
     const req = indexedDB.open(DB_NAME, DB_VERSION);
     req.onupgradeneeded = (e) => {
+      // Migração aditiva: NUNCA apaga stores existentes, só cria o que falta.
       const db = e.target.result;
       if (!db.objectStoreNames.contains("progress")) {
         db.createObjectStore("progress", { keyPath: "id" }); // per-question SRS state
@@ -30,6 +31,9 @@ function openDB() {
       }
       if (!db.objectStoreNames.contains("vocab")) {
         db.createObjectStore("vocab", { keyPath: "id" });
+      }
+      if (!db.objectStoreNames.contains("stats")) {
+        db.createObjectStore("stats", { keyPath: "key" }); // contador local (page views, visitas)
       }
     };
     req.onsuccess = () => resolve(req.result);
@@ -133,7 +137,7 @@ async function saveSession(session) {
 
 /* ---------------- Configurações ---------------- */
 const DEFAULT_SETTINGS = {
-  name: "",
+  name: "Leticia Alves",
   currentStage: 3,
   speed: "normal",       // slow | normal | fast | callan | auto
   voiceURI: null,
@@ -144,6 +148,10 @@ const DEFAULT_SETTINGS = {
   lastStudyDate: null,
   xp: 0,
   onboarded: false,
+  translationMode: "button",   // hidden | button | auto
+  recognitionLang: "en-US",    // en-US | en-GB
+  imagesEnabled: true,
+  adminPassword: null,
 };
 
 async function getSettings() {
@@ -184,4 +192,34 @@ async function importAllData(data) {
 
 async function resetAllProgress() {
   await Promise.all(["progress", "errors", "sessions"].map((s) => Store.clear(s)));
+}
+
+/* ---------------- Estatísticas locais (VISUALIZAÇÕES) ----------------
+   IMPORTANTE: isto conta acessos SÓ NESTE navegador/dispositivo — não é
+   um contador público de visitantes do site. Ver nota em renderAdmin(). */
+async function recordPageView() {
+  const rows = await Store.getAll("stats");
+  const map = {}; for (const r of rows) map[r.key] = r.value;
+  const now = Date.now();
+  const today = new Date().toDateString();
+
+  map.totalViews = (map.totalViews || 0) + 1;
+  map.lastVisit = now;
+  map.viewsByDay = map.viewsByDay || {};
+  map.viewsByDay[today] = (map.viewsByDay[today] || 0) + 1;
+
+  if (!map.firstVisit) map.firstVisit = now;
+  if (map.lastSessionMark !== today) {
+    map.uniqueDays = (map.uniqueDays || 0) + 1;
+    map.lastSessionMark = today;
+  }
+
+  for (const [key, value] of Object.entries(map)) await Store.put("stats", { key, value });
+  return map;
+}
+
+async function getStats() {
+  const rows = await Store.getAll("stats");
+  const map = {}; for (const r of rows) map[r.key] = r.value;
+  return map;
 }

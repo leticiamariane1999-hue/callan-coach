@@ -83,13 +83,15 @@ function shuffle(arr) {
 
 /* ---------------- Correção ---------------- */
 function normalize(text) {
-  return (text || "")
+  let t = (text || "")
+    .normalize("NFD").replace(/[\u0300-\u036f]/g, "") // remove acentos (não exigir acento)
     .toLowerCase()
     .replace(/[’‘]/g, "'")
-    .replace(/[“”]/g, '"')
-    .replace(/[.,!?;:]/g, "")
-    .replace(/\s+/g, " ")
-    .trim();
+    .replace(/[“”]/g, '"');
+  // contrações equivalentes (I'm == I am) — função vem de speech_correction.js,
+  // carregado antes do app rodar; se ainda não existir (testes isolados), ignora.
+  if (typeof expandContractions === "function") t = expandContractions(t);
+  return t.replace(/[.,!?;:]/g, "").replace(/\s+/g, " ").trim();
 }
 
 // Distância de edição por palavras (Levenshtein a nível de token) — robusta
